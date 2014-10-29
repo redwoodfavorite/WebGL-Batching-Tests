@@ -88,7 +88,7 @@ define(function(require){
     var worldPositionBuffer;
 
     // FOR CUBE VERTICES
-    var numCubes = 5000;
+    var numCubes = 10000;
     var genPositions = [];
 
     var pyramidVertexPositionBuffer;
@@ -122,6 +122,31 @@ define(function(require){
         gl.bindBuffer(gl.ARRAY_BUFFER, worldPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(genPositions), gl.STATIC_DRAW);
     }
+
+    // function updatePositionAttribs () {
+    //     var i;
+    //     var j;
+    //     var iIndex;
+    //     var jIndex;
+    //     var counter = Math.sin(Date.now() * 0.002) * 50;
+
+    //     for (i = 0; i < numCubes; i++) {
+    //         iIndex = i * 24;
+    //         tempPos[0] = Math.sin(i) * counter;
+    //         tempPos[1] = Math.cos(i) * counter;
+    //         tempPos[2] = Math.sin(i) * counter;
+
+    //         for (j = 0; j < 24; j++) {
+    //             jIndex = j * 3;
+    //             genPositions[iIndex + jIndex + 0] = tempPos[0];
+    //             genPositions[iIndex + jIndex + 1] = tempPos[1];
+    //             genPositions[iIndex + jIndex + 2] = tempPos[2];
+    //         }
+    //     }
+
+    //     gl.bindBuffer(gl.ARRAY_BUFFER, worldPositionBuffer);
+    //     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(genPositions), gl.STATIC_DRAW);
+    // }
 
     function flatten (array) {
         var flattened = [];
@@ -186,6 +211,10 @@ define(function(require){
         cubeVertexPositionBuffer.itemSize = 3;
         cubeVertexPositionBuffer.numItems = 24 * numCubes;
 
+        /* Set POSITION BUFFER attribute */
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
         /* Create MODEL INDEX buffer */
         modelIndexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
@@ -194,6 +223,8 @@ define(function(require){
         modelIndexBuffer.numItems = 36 * numCubes;
 
         /* Set MODEL INDEX attribute */
+        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
+        gl.vertexAttribPointer(shaderProgram.modelIndexAttribute, modelIndexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         /* Create CUBE INDEX BUFFER buffer */
         cubeVertexIndexBuffer = gl.createBuffer();
@@ -201,22 +232,17 @@ define(function(require){
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
         cubeVertexIndexBuffer.itemSize = 1;
         cubeVertexIndexBuffer.numItems = 36 * numCubes;
+
+        /* Bind Buffer */
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
     }
 
     var initialTime = Date.now();
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
         var time = Date.now() - initialTime;
         gl.uniform1f(shaderProgram.timeUniform, time);
-
-        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
-        gl.vertexAttribPointer(shaderProgram.modelIndexAttribute, modelIndexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
         gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     }
