@@ -87,8 +87,9 @@ define(function(require){
     var worldPositionBuffer;
 
     // FOR CUBE VERTICES
-    var numCubes = 5000;
+    var numCubes = 10000;
     var genPositions = [];
+    var tempPos = [];
 
     var pyramidVertexPositionBuffer;
     var cubeVertexPositionBuffer;
@@ -100,22 +101,47 @@ define(function(require){
         updatePositionAttribs();
     }
 
-    function updatePositionAttribs () {
-        genPositions = [];
+    // function updatePositionAttribs () {
+    //     genPositions = [];
 
+    //     var i;
+    //     var j;
+    //     var cubePos;
+    //     var counter = Math.sin(Date.now() * 0.002) * 50;
+
+    //     for (i = 0; i < numCubes; i++) {
+    //         cubePos = [
+    //             Math.sin(i) * counter,
+    //             Math.cos(i) * counter,
+    //             Math.sin(i) * counter
+    //         ];
+    //         for (j = 0; j < 24; j++) {
+    //             Array.prototype.push.apply(genPositions, cubePos);
+    //         }
+    //     }
+
+    //     gl.bindBuffer(gl.ARRAY_BUFFER, worldPositionBuffer);
+    //     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(genPositions), gl.STATIC_DRAW);
+    // }
+
+    function updatePositionAttribs () {
         var i;
         var j;
-        var cubePos;
+        var iIndex;
+        var jIndex;
         var counter = Math.sin(Date.now() * 0.002) * 50;
 
         for (i = 0; i < numCubes; i++) {
-            cubePos = [
-                Math.sin(i) * counter,
-                Math.cos(i) * counter,
-                Math.sin(i) * counter
-            ];
+            iIndex = i * 72;
+            tempPos[0] = Math.sin(i) * counter;
+            tempPos[1] = Math.cos(i) * counter;
+            tempPos[2] = Math.sin(i) * counter;
+
             for (j = 0; j < 24; j++) {
-                Array.prototype.push.apply(genPositions, cubePos);
+                jIndex = j * 3;
+                genPositions[iIndex + jIndex + 0] = tempPos[0];
+                genPositions[iIndex + jIndex + 1] = tempPos[1];
+                genPositions[iIndex + jIndex + 2] = tempPos[2];
             }
         }
 
