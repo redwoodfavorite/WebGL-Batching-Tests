@@ -80,6 +80,7 @@ define(function(require){
         gl.enableVertexAttribArray(shaderProgram.worldPositionAttribute);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.timeUniform = gl.getUniformLocation(shaderProgram, "uTime");
     }
 
     var mvMatrix      = mat4.create();
@@ -204,6 +205,7 @@ define(function(require){
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+        gl.uniform1i(shaderProgram.timeUniform, Date.now());
         // gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer);
         // gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, cubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
