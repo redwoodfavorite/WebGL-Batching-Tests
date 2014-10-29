@@ -16,20 +16,27 @@
 
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec3 aVertexPosition;
-            attribute vec4 aVertexColor;
-            attribute vec3 aWorldPosition;
+            attribute float aModelIndex;
 
             uniform mat4 uPMatrix;
+            uniform float uTime;
 
             void main(void) {
+                vec3 worldPosition = vec3(
+                    sin(uTime * 0.002 + aModelIndex) * (10.0 - (aModelIndex * 0.05)),
+                    cos(uTime * 0.002 + aModelIndex) * (10.0 - (aModelIndex * 0.05)),
+                    -100.0
+                );
+
                 vec4 pos = 
                 uPMatrix 
                 * mat4(
                 vec4(1, 0, 0, 0),
                 vec4(0, 1, 0, 0),
                 vec4(0, 0, 1, 0),
-                vec4(aWorldPosition.x, aWorldPosition.y, aWorldPosition.z - 100.0, 1))
+                vec4(worldPosition.x, worldPosition.y, worldPosition.z, 1))
                 * vec4(aVertexPosition, 1.0);
+
                 gl_Position   = pos;
             }
         </script>
@@ -37,5 +44,5 @@
 <body>
 </body>
 
-<script data-main="src/js/lesson-4.js" src="./lib/require.min.js"></script>
+<script data-main="src/js/1DrawShaderPositions.js" src="./lib/require.min.js"></script>
 </html>

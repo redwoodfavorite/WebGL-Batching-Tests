@@ -72,12 +72,12 @@ define(function(require){
 
         // shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
         // gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
+        
+        shaderProgram.modelIndexAttribute = gl.getAttribLocation(shaderProgram, "aModelIndex");
+        gl.enableVertexAttribArray(shaderProgram.modelIndexAttribute);
 
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        shaderProgram.worldPositionAttribute = gl.getAttribLocation(shaderProgram, "aWorldPosition");
-        gl.enableVertexAttribArray(shaderProgram.worldPositionAttribute);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.timeUniform = gl.getUniformLocation(shaderProgram, "uTime");
@@ -98,7 +98,6 @@ define(function(require){
 
     function initGeometries () {
         initBuffers();
-        updatePositionAttribs();
     }
 
     function updatePositionAttribs () {
@@ -157,6 +156,7 @@ define(function(require){
         var textureCoords = [];
         var normals       = [];
         var indices       = [];
+        var modelIndices  = [];
 
         for (var i = 0; i < numCubes; i++) {
             var indexOffset = i * 24;
@@ -168,6 +168,7 @@ define(function(require){
                     textureCoords.push([k & 1, (k & 2) / 2]);
                     normals.push(data.slice(4, 7));
                 }
+                modelIndices.push(i, i, i, i, i, i);
                 indices.push([indexOffset + v, indexOffset + v + 1, indexOffset + v + 2]);
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
             }
@@ -178,39 +179,42 @@ define(function(require){
         textureCoords = flatten(textureCoords);
         normals       = flatten(normals);
 
+        /* Create CUBE VERTEX buffer */
         cubeVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         cubeVertexPositionBuffer.itemSize = 3;
         cubeVertexPositionBuffer.numItems = 24 * numCubes;
 
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colorData), gl.STATIC_DRAW);
-        // cubeVertexColorBuffer.itemSize = 4;
-        // cubeVertexColorBuffer.numItems = 24 * numCubes;
+        /* Create MODEL INDEX buffer */
+        modelIndexBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelIndices), gl.STATIC_DRAW);
+        modelIndexBuffer.itemSize = 1;
+        modelIndexBuffer.numItems = 36 * numCubes;
 
+        /* Set MODEL INDEX attribute */
+
+        /* Create CUBE INDEX BUFFER buffer */
         cubeVertexIndexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
         cubeVertexIndexBuffer.itemSize = 1;
         cubeVertexIndexBuffer.numItems = 36 * numCubes;
-
-        worldPositionBuffer = gl.createBuffer();
-        worldPositionBuffer.itemSize = 3;
-        worldPositionBuffer.numItems = 24 * numCubes;
     }
 
+    var initialTime = Date.now();
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        gl.uniform1i(shaderProgram.timeUniform, Date.now());
-        // gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexColorBuffer);
-        // gl.vertexAttribPointer(shaderProgram.vertexColorAttribute, cubeVertexColorBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        var time = Date.now() - initialTime;
+        gl.uniform1f(shaderProgram.timeUniform, time);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, worldPositionBuffer);
-        gl.vertexAttribPointer(shaderProgram.worldPositionAttribute, worldPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
+        gl.vertexAttribPointer(shaderProgram.modelIndexAttribute, modelIndexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
 
@@ -255,7 +259,6 @@ define(function(require){
 
     function tick () {
         requestAnimationFrame(tick);
-        updatePositionAttribs();
         drawScene();
     }
 
