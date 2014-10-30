@@ -8,9 +8,11 @@
 
         <script id="shader-fs" type="x-shader/x-fragment">
             precision mediump float;
+            varying vec3 vNormal;
 
             void main(void) {
-                gl_FragColor = vec4(1.0);
+                // gl_FragColor = vec4(1.0);
+                gl_FragColor = vec4(vNormal, 1.0);
             }
         </script>
 
@@ -19,7 +21,10 @@
             attribute vec4 aVertexColor;
             attribute vec3 aTranslation;
             attribute vec3 aRotation;
+            attribute vec3 aNormal;
             uniform mat4 uPMatrix;
+
+            varying vec3 vNormal;
 
             const mat4 identity = mat4(
                 1, 0, 0, 0,
@@ -91,6 +96,8 @@
             }
 
             void main(void) {
+                vNormal = aNormal;
+
                 vec4 pos = 
                 uPMatrix 
                 * matFromVectors(aTranslation)

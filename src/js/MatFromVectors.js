@@ -74,8 +74,8 @@ define(function(require){
         shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
         gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
 
-        // shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
-        // gl.enableVertexAttribArray(shaderProgram.normalAttribute);
+        shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
+        gl.enableVertexAttribArray(shaderProgram.normalAttribute);
 
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
@@ -90,7 +90,7 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes     = 1000;
+    var numCubes     = 5000;
 
     function initGeometries () {
         initBuffers();
@@ -102,7 +102,7 @@ define(function(require){
     var rotations = [];
     var tempRot   = [];
 
-    const VARIANCE = 5;
+    const VARIANCE = 2;
     const CUBESPERROW = 10;
     function updateVectors () {
         var i;
@@ -110,19 +110,21 @@ define(function(require){
         var iIndex;
         var jIndex;
         var calculatedVariance;
-        var counter = Math.sin(Date.now() * 0.001) * 1;
+        var currentTime = Date.now();
+        var translationCounter = Math.sin(currentTime * 0.001);
+        var rotationCounter    = currentTime * 0.001;
 
         for (i = 0; i < numCubes; i++) {
             calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
 
             iIndex = i * 72;
-            tempPos[0] = Math.sin(i + counter) * calculatedVariance;
-            tempPos[1] = Math.cos(i + counter) * calculatedVariance;
-            tempPos[2] = Math.sin(i + counter) - 100.0;
+            tempPos[0] = Math.sin(i + translationCounter) * calculatedVariance;
+            tempPos[1] = Math.cos(i + translationCounter) * calculatedVariance;
+            tempPos[2] = Math.sin(i + translationCounter) - 100.0;
 
-            tempRot[0] = Math.sin(i + counter);
-            tempRot[1] = Math.cos(i + counter);
-            tempRot[2] = Math.sin(i + counter);
+            tempRot[0] = Math.sin(i + rotationCounter);
+            tempRot[1] = Math.cos(i + rotationCounter);
+            tempRot[2] = Math.cos(i + rotationCounter);
 
             for (j = 0; j < 24; j++) {
                 jIndex = j * 3;
@@ -213,13 +215,14 @@ define(function(require){
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        // normalBuffer = gl.createBuffer();
-        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, normalBuffer);
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
-        // normalBuffer.itemSize = 3;
-        // normalBuffer.numItems = 24 * numCubes;
+        normalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+        normalBuffer.itemSize = 3;
+        normalBuffer.numItems = 24 * numCubes;
 
-        // gl.vertexAttribPointer(shaderProgram.normalAttribute, normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+        gl.vertexAttribPointer(shaderProgram.normalAttribute, normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         cubeVertexIndexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
