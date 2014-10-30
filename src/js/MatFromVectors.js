@@ -90,7 +90,8 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes     = 5000;
+    // var numCubes     = 5000;
+    var numCubes     = 100;
 
     var positions = [];
     var tempPos   = [];

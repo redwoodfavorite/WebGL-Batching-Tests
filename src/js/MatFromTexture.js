@@ -76,8 +76,8 @@ define(function(require){
         shaderProgram.vertexIdAttribute = gl.getAttribLocation(shaderProgram, "aVertexId");
         gl.enableVertexAttribArray(shaderProgram.vertexIdAttribute);
 
-        shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
-        gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
+        // shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
+        // gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
 
         shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
         gl.enableVertexAttribArray(shaderProgram.normalAttribute);
@@ -85,8 +85,8 @@ define(function(require){
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-        shaderProgram.translation = gl.getAttribLocation(shaderProgram, "aTranslation");
-        gl.enableVertexAttribArray(shaderProgram.translation);
+        // shaderProgram.translation = gl.getAttribLocation(shaderProgram, "aTranslation");
+        // gl.enableVertexAttribArray(shaderProgram.translation);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.uDataTexture   = gl.getUniformLocation(shaderProgram, "uDataTexture");
@@ -97,7 +97,7 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes     = 5000;
+    var numCubes  = 100;
 
     var positions = [];
     var tempPos   = [];
@@ -115,11 +115,14 @@ define(function(require){
         var currentTime = Date.now();
         var translationCounter = Math.sin(currentTime * 0.001);
         var rotationCounter    = currentTime * 0.003;
+        // var texData = new Float32Array(textureWidth * textureWidth * 3);
+        // var texData = new Float32Array(7200 * 3);
+        var texData = new Float32Array(textureWidth * 3);
 
         for (i = 0; i < numCubes; i++) {
             calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
 
-            iIndex = i * 72;
+            iIndex = i * 144;
             tempPos[0] = Math.sin(i + translationCounter) * calculatedVariance;
             tempPos[1] = Math.cos(i + translationCounter) * calculatedVariance;
             tempPos[2] = Math.sin(i + translationCounter) - 100.0;
@@ -129,32 +132,28 @@ define(function(require){
             tempRot[2] = Math.cos(i + rotationCounter);
 
             for (j = 0; j < 24; j++) {
-                jIndex = j * 3;
-                rotations[iIndex + jIndex + 0] = tempRot[0];
-                rotations[iIndex + jIndex + 1] = tempRot[1];
-                rotations[iIndex + jIndex + 2] = tempRot[2];
+                jIndex = j * 6;
+                texData[iIndex + jIndex + 0] = tempPos[0];
+                texData[iIndex + jIndex + 1] = tempPos[1];
+                texData[iIndex + jIndex + 2] = tempPos[2];
 
-                positions[iIndex + jIndex + 0] = tempPos[0];
-                positions[iIndex + jIndex + 1] = tempPos[1];
-                positions[iIndex + jIndex + 2] = tempPos[2];
+                texData[iIndex + jIndex + 3] = tempRot[0];
+                texData[iIndex + jIndex + 4] = tempRot[1];
+                texData[iIndex + jIndex + 5] = tempRot[2];
             }
         }
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rotations), gl.STATIC_DRAW);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rotations), gl.STATIC_DRAW);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, dataTexture);
         gl.uniform1i(shaderProgram.uDataTexture, 0);
 
-        var texData = new Float32Array(textureWidth * textureWidth * 3);
-        var posLength = positions.length;
-        for (var i = 0; i < posLength; i++) texData[i] = positions[i];
-
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, textureWidth, textureWidth, 0, gl.RGB, gl.FLOAT, texData);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, textureWidth, 1, 0, gl.RGB, gl.FLOAT, texData);
     }
 
     var dataTexture;
@@ -167,7 +166,11 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        textureWidth = Math.ceil(Math.sqrt((74 * numCubes / 3)));
+        // textureWidth = Math.ceil(Math.sqrt((74 * numCubes / 3)));
+
+        //24 vertices per cube, 2 different vector3s per vertex
+        textureWidth = (numCubes * 24 * 2);
+
         console.log(textureWidth)
     }
 
@@ -228,7 +231,8 @@ define(function(require){
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
             }
         }
-
+        console.log(ids[ids.length - 1], vertices.length);
+        console.log(textureWidth, ids.length);
         indices       = flatten(indices);
         vertices      = flatten(vertices);
         textureCoords = flatten(textureCoords);
@@ -276,13 +280,13 @@ define(function(require){
         // SET UP VECTOR BUFFERS
         /////////////////////////////////////////////////
 
-        translationBuffer          = gl.createBuffer();
-        translationBuffer.itemSize = 3;
-        translationBuffer.numItems = 24 * numCubes;
+        // translationBuffer          = gl.createBuffer();
+        // translationBuffer.itemSize = 3;
+        // translationBuffer.numItems = 24 * numCubes;
 
-        rotationBuffer          = gl.createBuffer();
-        rotationBuffer.itemSize = 3;
-        rotationBuffer.numItems = 24 * numCubes;
+        // rotationBuffer          = gl.createBuffer();
+        // rotationBuffer.itemSize = 3;
+        // rotationBuffer.numItems = 24 * numCubes;
     }
 
     function drawScene() {
@@ -291,8 +295,8 @@ define(function(require){
         // gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
         // gl.vertexAttribPointer(shaderProgram.translation, translationBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
-        gl.vertexAttribPointer(shaderProgram.rotationAttribute, rotationBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
+        // gl.vertexAttribPointer(shaderProgram.rotationAttribute, rotationBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     }
@@ -314,7 +318,7 @@ define(function(require){
     function setPerspectiveMatrix () {
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-        gl.uniform1f(shaderProgram.uTexWidth, textureWidth);
+        gl.uniform1f(shaderProgram.uTexWidth, textureWidth - 1.);
     }
 
     function tick () {

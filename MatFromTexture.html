@@ -19,8 +19,8 @@
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec3 aVertexPosition;
             attribute vec4 aVertexColor;
-            attribute vec3 aTranslation;
-            attribute vec3 aRotation;
+            // attribute vec3 aTranslation;
+            // attribute vec3 aRotation;
             attribute vec3 aNormal;
             attribute float aVertexId;
             uniform float uTexWidth;
@@ -87,27 +87,35 @@
                 return outMatrix;
             }
 
-            mat4 matFromVectors(in vec3 translation) {
+            mat4 matFromVectors(in vec3 translation, in vec3 rotation) {
                 mat4 mvMatrix = identity;
                 mvMatrix[3].xyz = translation;
 
-                mvMatrix = rotateMatrix(mvMatrix, aRotation.x, vec3(1.0, 0.0, 0.0));
-                mvMatrix = rotateMatrix(mvMatrix, aRotation.y, vec3(0.0, 1.0, 0.0));
-                mvMatrix = rotateMatrix(mvMatrix, aRotation.z, vec3(0.0, 0.0, 1.0));
+                mvMatrix = rotateMatrix(mvMatrix, rotation.x, vec3(1.0, 0.0, 0.0));
+                mvMatrix = rotateMatrix(mvMatrix, rotation.y, vec3(0.0, 1.0, 0.0));
+                mvMatrix = rotateMatrix(mvMatrix, rotation.z, vec3(0.0, 0.0, 1.0));
 
                 return mvMatrix;
             }
 
             void main(void) {
-                float xPos       = mod(aVertexId, uTexWidth);
-                float yPos       = floor(aVertexId / uTexWidth) / uTexWidth;
-                vec3 translation = texture2D(uDataTexture, vec2(xPos, yPos)).rgb;
-                // vec3 translation = vec3(uTexWidth);
-                vNormal          = aNormal;
+                // float xPos       = mod(aVertexId, uTexWidth);
+                // float yPos       = floor(aVertexId / uTexWidth) / uTexWidth;
+                // vec3 translation = texture2D(uDataTexture, vec2(xPos, yPos)).rgb;
+
+                vec3 translation = texture2D(
+                    uDataTexture, vec2((aVertexId * 2.0) / uTexWidth, 0)
+                ).rgb;
+
+                vec3 rotation = texture2D(
+                    uDataTexture, vec2((aVertexId * 2.0 + 1.0) / uTexWidth, 0)
+                ).rgb;
+
+                vNormal = aNormal;
 
                 vec4 pos = 
                 uPMatrix 
-                * matFromVectors(translation)
+                * matFromVectors(translation, rotation)
                 * vec4(aVertexPosition, 1.0);
                 gl_Position   = pos;
             }
