@@ -53,6 +53,8 @@ define(function(require){
             return null;
         }
 
+        var floatTextures = gl.getExtension('OES_texture_float');
+
         return shader;
     }
 
@@ -71,6 +73,9 @@ define(function(require){
 
         gl.useProgram(shaderProgram);
 
+        shaderProgram.vertexIdAttribute = gl.getAttribLocation(shaderProgram, "aVertexId");
+        gl.enableVertexAttribArray(shaderProgram.vertexIdAttribute);
+
         shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
         gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
 
@@ -84,6 +89,8 @@ define(function(require){
         gl.enableVertexAttribArray(shaderProgram.translation);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
+        shaderProgram.uDataTexture   = gl.getUniformLocation(shaderProgram, "uDataTexture");
+        shaderProgram.uTexWidth      = gl.getUniformLocation(shaderProgram, "uTexWidth");
     }
 
     var mvMatrix      = mat4.create();
@@ -138,6 +145,30 @@ define(function(require){
 
         gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rotations), gl.STATIC_DRAW);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, dataTexture);
+        gl.uniform1i(shaderProgram.uDataTexture, 0);
+
+        var texData = new Float32Array(textureWidth * textureWidth * 3);
+        var posLength = positions.length;
+        for (var i = 0; i < posLength; i++) texData[i] = positions[i];
+
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, textureWidth, textureWidth, 0, gl.RGB, gl.FLOAT, texData);
+    }
+
+    var dataTexture;
+    var textureWidth;
+    function initTexture () {
+        dataTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, dataTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        textureWidth = Math.ceil(Math.sqrt((74 * numCubes / 3)));
+        console.log(textureWidth)
     }
 
     function flatten (array) {
@@ -180,6 +211,7 @@ define(function(require){
         var textureCoords = [];
         var normals       = [];
         var indices       = [];
+        var ids           = [];
 
         for (var i = 0; i < numCubes; i++) {
             var indexOffset = i * 24;
@@ -190,6 +222,7 @@ define(function(require){
                     vertices.push(pickOctant(d));
                     textureCoords.push([k & 1, (k & 2) / 2]);
                     normals.push(data.slice(4, 7));
+                    ids.push(indexOffset + k + (j* 4));
                 }
                 indices.push([indexOffset + v, indexOffset + v + 1, indexOffset + v + 2]);
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
@@ -201,6 +234,7 @@ define(function(require){
         textureCoords = flatten(textureCoords);
         normals       = flatten(normals);
 
+        /* SET UP POSITION BUFFER */
         cubeVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -210,6 +244,17 @@ define(function(require){
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+        /* SET UP ID BUFFER */
+        vertexIdBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexIdBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ids), gl.STATIC_DRAW);
+        vertexIdBuffer.itemSize = 1;
+        vertexIdBuffer.numItems = 24 * numCubes;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexIdBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexIdAttribute, vertexIdBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+        /* SET UP NORMAL BUFFER */
         normalBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
@@ -243,8 +288,8 @@ define(function(require){
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
-        gl.vertexAttribPointer(shaderProgram.translation, translationBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        // gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
+        // gl.vertexAttribPointer(shaderProgram.translation, translationBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
         gl.vertexAttribPointer(shaderProgram.rotationAttribute, rotationBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -255,6 +300,7 @@ define(function(require){
     function webGLStart(canvas) {
         initGL(canvas);
         initShaders();
+        initTexture();
         initBuffers();
         setPerspectiveMatrix();
 
@@ -268,6 +314,7 @@ define(function(require){
     function setPerspectiveMatrix () {
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
+        gl.uniform1f(shaderProgram.uTexWidth, textureWidth);
     }
 
     function tick () {
