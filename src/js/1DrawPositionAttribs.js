@@ -87,7 +87,7 @@ define(function(require){
     var worldPositionBuffer;
 
     // FOR CUBE VERTICES
-    var numCubes = 10000;
+    var numCubes = 50000;
     var genPositions = [];
     var tempPos = [];
 

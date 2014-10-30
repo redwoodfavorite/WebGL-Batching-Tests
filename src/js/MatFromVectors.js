@@ -48,7 +48,8 @@ define(function(require){
         gl.compileShader(shader);
 
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            alert(gl.getShaderInfoLog(shader));
+            // alert(gl.getShaderInfoLog(shader, str));
+            console.log(gl.getShaderInfoLog(shader, str));
             return null;
         }
 
@@ -70,31 +71,77 @@ define(function(require){
 
         gl.useProgram(shaderProgram);
 
-        // shaderProgram.vertexColorAttribute = gl.getAttribLocation(shaderProgram, "aVertexColor");
-        // gl.enableVertexAttribArray(shaderProgram.vertexColorAttribute);
-        
-        shaderProgram.modelIndexAttribute = gl.getAttribLocation(shaderProgram, "aModelIndex");
-        gl.enableVertexAttribArray(shaderProgram.modelIndexAttribute);
+        shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
+        gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
+
+        // shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
+        // gl.enableVertexAttribArray(shaderProgram.normalAttribute);
 
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
+        shaderProgram.translation = gl.getAttribLocation(shaderProgram, "aTranslation");
+        gl.enableVertexAttribArray(shaderProgram.translation);
+
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
-        shaderProgram.timeUniform = gl.getUniformLocation(shaderProgram, "uTime");
     }
 
     var mvMatrix      = mat4.create();
     var pMatrix       = mat4.create();
-    var worldPositionBuffer;
 
     // FOR CUBE VERTICES
-    var numCubes = 100000;
-    var genPositions = [];
+    var numCubes     = 1000;
 
-    var pyramidVertexPositionBuffer;
-    var cubeVertexPositionBuffer;
-    var cubeVertexColorBuffer;
-    var cubeVertexIndexBuffer;
+    function initGeometries () {
+        initBuffers();
+        updateVectors();
+    }
+
+    var positions = [];
+    var tempPos   = [];
+    var rotations = [];
+    var tempRot   = [];
+
+    const VARIANCE = 5;
+    const CUBESPERROW = 10;
+    function updateVectors () {
+        var i;
+        var j;
+        var iIndex;
+        var jIndex;
+        var calculatedVariance;
+        var counter = Math.sin(Date.now() * 0.001) * 1;
+
+        for (i = 0; i < numCubes; i++) {
+            calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
+
+            iIndex = i * 72;
+            tempPos[0] = Math.sin(i + counter) * calculatedVariance;
+            tempPos[1] = Math.cos(i + counter) * calculatedVariance;
+            tempPos[2] = Math.sin(i + counter) - 100.0;
+
+            tempRot[0] = Math.sin(i + counter);
+            tempRot[1] = Math.cos(i + counter);
+            tempRot[2] = Math.sin(i + counter);
+
+            for (j = 0; j < 24; j++) {
+                jIndex = j * 3;
+                rotations[iIndex + jIndex + 0] = tempRot[0];
+                rotations[iIndex + jIndex + 1] = tempRot[1];
+                rotations[iIndex + jIndex + 2] = tempRot[2];
+
+                positions[iIndex + jIndex + 0] = tempPos[0];
+                positions[iIndex + jIndex + 1] = tempPos[1];
+                positions[iIndex + jIndex + 2] = tempPos[2];
+            }
+        }
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rotations), gl.STATIC_DRAW);
+    }
 
     function flatten (array) {
         var flattened = [];
@@ -110,6 +157,13 @@ define(function(require){
 
         return flattened;
     }
+
+    var cubeVertexPositionBuffer;
+    var translationBuffer;
+    var cubeVertexColorBuffer;
+    var cubeVertexIndexBuffer;
+    var rotationBuffer;
+    var normalBuffer;
 
     function initBuffers() {
         function pickOctant(i) {
@@ -129,7 +183,6 @@ define(function(require){
         var textureCoords = [];
         var normals       = [];
         var indices       = [];
-        var modelIndices  = [];
 
         for (var i = 0; i < numCubes; i++) {
             var indexOffset = i * 24;
@@ -141,7 +194,6 @@ define(function(require){
                     textureCoords.push([k & 1, (k & 2) / 2]);
                     normals.push(data.slice(4, 7));
                 }
-                modelIndices.push(i, i, i, i, i, i);
                 indices.push([indexOffset + v, indexOffset + v + 1, indexOffset + v + 2]);
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
             }
@@ -152,71 +204,60 @@ define(function(require){
         textureCoords = flatten(textureCoords);
         normals       = flatten(normals);
 
-        /* Create CUBE VERTEX buffer */
         cubeVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         cubeVertexPositionBuffer.itemSize = 3;
         cubeVertexPositionBuffer.numItems = 24 * numCubes;
 
-        /* Set POSITION BUFFER attribute */
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        /* Create MODEL INDEX buffer */
-        modelIndexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(modelIndices), gl.STATIC_DRAW);
-        modelIndexBuffer.itemSize = 1;
-        modelIndexBuffer.numItems = 36 * numCubes;
+        // normalBuffer = gl.createBuffer();
+        // gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, normalBuffer);
+        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);
+        // normalBuffer.itemSize = 3;
+        // normalBuffer.numItems = 24 * numCubes;
 
-        /* Set MODEL INDEX attribute */
-        gl.bindBuffer(gl.ARRAY_BUFFER, modelIndexBuffer);
-        gl.vertexAttribPointer(shaderProgram.modelIndexAttribute, modelIndexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        // gl.vertexAttribPointer(shaderProgram.normalAttribute, normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        /* Create CUBE INDEX BUFFER buffer */
         cubeVertexIndexBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
         cubeVertexIndexBuffer.itemSize = 1;
         cubeVertexIndexBuffer.numItems = 36 * numCubes;
 
-        /* Bind Buffer */
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
+
+        /////////////////////////////////////////////////
+        // SET UP VECTOR BUFFERS
+        /////////////////////////////////////////////////
+
+        translationBuffer = gl.createBuffer();
+        translationBuffer.itemSize = 3;
+        translationBuffer.numItems = 24 * numCubes;
+
+        rotationBuffer = gl.createBuffer();
+        rotationBuffer.itemSize = 3;
+        rotationBuffer.numItems = 24 * numCubes;
     }
 
-    var initialTime = Date.now();
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        var time = Date.now() - initialTime;
-        gl.uniform1f(shaderProgram.timeUniform, time);
+        gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
+        gl.vertexAttribPointer(shaderProgram.translation, translationBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
+        gl.vertexAttribPointer(shaderProgram.rotationAttribute, rotationBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
-    }
-
-    var spriteSheet;
-    function initTexture () {
-        spriteSheet              = gl.createTexture();
-        spriteSheet.image        = new Image();
-        spriteSheet.image.onload = handleLoadTexture.bind(null, spriteSheet);
-
-        spriteSheet.image.src = "./public/square.jpg";
-    }
-
-    function handleLoadTexture (texture) {
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
     function webGLStart(canvas) {
         initGL(canvas);
         initShaders();
-        initBuffers();
+        initGeometries();
         setPerspectiveMatrix();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
@@ -233,8 +274,11 @@ define(function(require){
 
     function tick () {
         requestAnimationFrame(tick);
+        updateVectors();
         drawScene();
     }
 
     webGLStart();
 });
+
+
