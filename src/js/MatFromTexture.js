@@ -76,17 +76,11 @@ define(function(require){
         shaderProgram.vertexIdAttribute = gl.getAttribLocation(shaderProgram, "aVertexId");
         gl.enableVertexAttribArray(shaderProgram.vertexIdAttribute);
 
-        // shaderProgram.rotationAttribute = gl.getAttribLocation(shaderProgram, "aRotation");
-        // gl.enableVertexAttribArray(shaderProgram.rotationAttribute);
-
         shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
         gl.enableVertexAttribArray(shaderProgram.normalAttribute);
 
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-
-        // shaderProgram.translation = gl.getAttribLocation(shaderProgram, "aTranslation");
-        // gl.enableVertexAttribArray(shaderProgram.translation);
 
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.uDataTexture   = gl.getUniformLocation(shaderProgram, "uDataTexture");
@@ -115,8 +109,8 @@ define(function(require){
         var currentTime = Date.now();
         var translationCounter = Math.sin(currentTime * 0.001);
         var rotationCounter    = currentTime * 0.003;
-        // var texData = new Float32Array(textureWidth * textureWidth * 3);
-        // var texData = new Float32Array(7200 * 3);
+        
+        // Create array where length = pixel counter * the rgb channels for each pixel.
         var texData = new Float32Array(textureWidth * 3);
 
         for (i = 0; i < numCubes; i++) {
@@ -143,12 +137,6 @@ define(function(require){
             }
         }
 
-        // gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
-        // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(rotations), gl.STATIC_DRAW);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, dataTexture);
         gl.uniform1i(shaderProgram.uDataTexture, 0);
@@ -165,8 +153,6 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-        // textureWidth = Math.ceil(Math.sqrt((74 * numCubes / 3)));
 
         //24 vertices per cube, 2 different vector3s per vertex
         textureWidth = (numCubes * 24 * 2);
@@ -231,8 +217,7 @@ define(function(require){
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
             }
         }
-        console.log(ids[ids.length - 1], vertices.length);
-        console.log(textureWidth, ids.length);
+
         indices       = flatten(indices);
         vertices      = flatten(vertices);
         textureCoords = flatten(textureCoords);
@@ -275,28 +260,10 @@ define(function(require){
         cubeVertexIndexBuffer.numItems = 36 * numCubes;
 
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-
-        /////////////////////////////////////////////////
-        // SET UP VECTOR BUFFERS
-        /////////////////////////////////////////////////
-
-        // translationBuffer          = gl.createBuffer();
-        // translationBuffer.itemSize = 3;
-        // translationBuffer.numItems = 24 * numCubes;
-
-        // rotationBuffer          = gl.createBuffer();
-        // rotationBuffer.itemSize = 3;
-        // rotationBuffer.numItems = 24 * numCubes;
     }
 
     function drawScene() {
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, translationBuffer);
-        // gl.vertexAttribPointer(shaderProgram.translation, translationBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-        // gl.bindBuffer(gl.ARRAY_BUFFER, rotationBuffer);
-        // gl.vertexAttribPointer(shaderProgram.rotationAttribute, rotationBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
     }
@@ -330,4 +297,11 @@ define(function(require){
     webGLStart();
 });
 
+//
+// FOR SQUARE TEXTURE
+//
+// textureWidth = Math.ceil(Math.sqrt((74 * numCubes / 3)));
+//
+// var texData = new Float32Array(textureWidth * textureWidth * 3);
+// 
 
