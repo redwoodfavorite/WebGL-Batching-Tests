@@ -91,7 +91,7 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes  = 100;
+    var numCubes  = 200;
 
     var positions = [];
     var tempPos   = [];
@@ -304,4 +304,7 @@ define(function(require){
 //
 // var texData = new Float32Array(textureWidth * textureWidth * 3);
 // 
+// float xPos       = mod(aVertexId, uTexWidth);
+// float yPos       = floor(aVertexId / uTexWidth) / uTexWidth;
+// vec3 translation = texture2D(uDataTexture, vec2(xPos, yPos)).rgb;
 

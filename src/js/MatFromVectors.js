@@ -91,7 +91,7 @@ define(function(require){
 
     // FOR CUBE VERTICES
     // var numCubes     = 5000;
-    var numCubes     = 100;
+    var numCubes     = 200;
 
     var positions = [];
     var tempPos   = [];
