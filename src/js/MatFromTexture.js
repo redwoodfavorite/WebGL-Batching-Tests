@@ -3,6 +3,7 @@ define(function(require){
     var canvas;
     
     function initGL(canvas) {
+        console.log(1)
         canvas = document.createElement('canvas');
         canvas.width = innerWidth;
         canvas.height = innerHeight;
@@ -91,14 +92,14 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes  = 200;
+    var numCubes  = 1000;
 
     var positions = [];
     var tempPos   = [];
     var rotations = [];
     var tempRot   = [];
 
-    const VARIANCE = 2;
+    const VARIANCE    = 1;
     const CUBESPERROW = 10;
     function updateVectors () {
         var i;
@@ -116,25 +117,14 @@ define(function(require){
         for (i = 0; i < numCubes; i++) {
             calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
 
-            iIndex = i * 144;
-            tempPos[0] = Math.sin(i + translationCounter) * calculatedVariance;
-            tempPos[1] = Math.cos(i + translationCounter) * calculatedVariance;
-            tempPos[2] = Math.sin(i + translationCounter) - 100.0;
+            iIndex = i * 6;
+            texData[iIndex + 0] = Math.sin(i + translationCounter) * calculatedVariance;
+            texData[iIndex + 1] = Math.cos(i + translationCounter) * calculatedVariance;
+            texData[iIndex + 2] = Math.sin(i + translationCounter) - 100.0;
 
-            tempRot[0] = Math.sin(i + rotationCounter);
-            tempRot[1] = Math.cos(i + rotationCounter);
-            tempRot[2] = Math.cos(i + rotationCounter);
-
-            for (j = 0; j < 24; j++) {
-                jIndex = j * 6;
-                texData[iIndex + jIndex + 0] = tempPos[0];
-                texData[iIndex + jIndex + 1] = tempPos[1];
-                texData[iIndex + jIndex + 2] = tempPos[2];
-
-                texData[iIndex + jIndex + 3] = tempRot[0];
-                texData[iIndex + jIndex + 4] = tempRot[1];
-                texData[iIndex + jIndex + 5] = tempRot[2];
-            }
+            texData[iIndex + 3] = Math.sin(i + rotationCounter);
+            texData[iIndex + 4] = Math.cos(i + rotationCounter);
+            texData[iIndex + 5] = Math.cos(i + rotationCounter);
         }
 
         gl.activeTexture(gl.TEXTURE0);
@@ -155,9 +145,9 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         //24 vertices per cube, 2 different vector3s per vertex
-        textureWidth = (numCubes * 24 * 2);
+        textureWidth = (numCubes * 2);
 
-        console.log(textureWidth)
+        //var vertexTextureWidth = Math.ceil(Math.sqrt(verticeCount/3));
     }
 
     function flatten (array) {
@@ -211,7 +201,7 @@ define(function(require){
                     vertices.push(pickOctant(d));
                     textureCoords.push([k & 1, (k & 2) / 2]);
                     normals.push(data.slice(4, 7));
-                    ids.push(indexOffset + k + (j* 4));
+                    ids.push(i);
                 }
                 indices.push([indexOffset + v, indexOffset + v + 1, indexOffset + v + 2]);
                 indices.push([indexOffset + v + 2, indexOffset + v + 1, indexOffset + v + 3]);
