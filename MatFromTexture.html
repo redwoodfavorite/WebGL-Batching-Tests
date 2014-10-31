@@ -22,7 +22,7 @@
             // attribute vec3 aTranslation;
             // attribute vec3 aRotation;
             attribute vec3 aNormal;
-            attribute float aVertexId;
+            attribute float aCubeId;
             uniform float uTexWidth;
             uniform mat4 uPMatrix;
             uniform sampler2D uDataTexture;
@@ -99,13 +99,18 @@
             }
 
             void main(void) {
-                vec3 translation = texture2D(
-                    uDataTexture, vec2((aVertexId * 2.0) / uTexWidth, 0)
-                ).rgb;
+                vec2 posLocation = vec2(
+                    mod(aCubeId * 2.0, uTexWidth),
+                    floor(aCubeId * 2.0 / uTexWidth) / uTexWidth
+                );
 
-                vec3 rotation = texture2D(
-                    uDataTexture, vec2((aVertexId * 2.0 + 1.0) / uTexWidth, 0)
-                ).rgb;
+                vec2 rotLocation = vec2(
+                    mod((aCubeId * 2.0 + 1.0), uTexWidth),
+                    floor((aCubeId * 2.0 + 1.0) / uTexWidth) / uTexWidth
+                );
+
+                vec3 translation = texture2D(uDataTexture, posLocation).rgb;
+                vec3 rotation    = texture2D(uDataTexture, rotLocation).rgb;
 
                 vNormal     = aNormal;
                 vec4 pos    = uPMatrix * matFromVectors(translation, rotation) * vec4(aVertexPosition, 1.0);

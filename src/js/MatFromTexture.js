@@ -74,8 +74,8 @@ define(function(require){
 
         gl.useProgram(shaderProgram);
 
-        shaderProgram.vertexIdAttribute = gl.getAttribLocation(shaderProgram, "aVertexId");
-        gl.enableVertexAttribArray(shaderProgram.vertexIdAttribute);
+        shaderProgram.cubeIdAttribute = gl.getAttribLocation(shaderProgram, "aCubeId");
+        gl.enableVertexAttribArray(shaderProgram.cubeIdAttribute);
 
         shaderProgram.normalAttribute = gl.getAttribLocation(shaderProgram, "aNormal");
         gl.enableVertexAttribArray(shaderProgram.normalAttribute);
@@ -112,7 +112,7 @@ define(function(require){
         var rotationCounter    = currentTime * 0.003;
         
         // Create array where length = pixel counter * the rgb channels for each pixel.
-        var texData = new Float32Array(textureWidth * 3);
+        var texData = new Float32Array(textureWidth * textureWidth * 3);
 
         for (i = 0; i < numCubes; i++) {
             calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
@@ -131,7 +131,7 @@ define(function(require){
         gl.bindTexture(gl.TEXTURE_2D, dataTexture);
         gl.uniform1i(shaderProgram.uDataTexture, 0);
 
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, textureWidth, 1, 0, gl.RGB, gl.FLOAT, texData);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, textureWidth, textureWidth, 0, gl.RGB, gl.FLOAT, texData);
     }
 
     var dataTexture;
@@ -145,8 +145,8 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         //24 vertices per cube, 2 different vector3s per vertex
-        textureWidth = (numCubes * 2);
-
+        textureWidth = Math.ceil(Math.sqrt(numCubes * 2));
+        console.log(textureWidth)
         //var vertexTextureWidth = Math.ceil(Math.sqrt(verticeCount/3));
     }
 
@@ -224,14 +224,14 @@ define(function(require){
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         /* SET UP ID BUFFER */
-        vertexIdBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexIdBuffer);
+        cubeIdBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeIdBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ids), gl.STATIC_DRAW);
-        vertexIdBuffer.itemSize = 1;
-        vertexIdBuffer.numItems = 24 * numCubes;
+        cubeIdBuffer.itemSize = 1;
+        cubeIdBuffer.numItems = 24 * numCubes;
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, vertexIdBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexIdAttribute, vertexIdBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, cubeIdBuffer);
+        gl.vertexAttribPointer(shaderProgram.cubeIdAttribute, cubeIdBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         /* SET UP NORMAL BUFFER */
         normalBuffer = gl.createBuffer();
@@ -294,7 +294,7 @@ define(function(require){
 //
 // var texData = new Float32Array(textureWidth * textureWidth * 3);
 // 
-// float xPos       = mod(aVertexId, uTexWidth);
-// float yPos       = floor(aVertexId / uTexWidth) / uTexWidth;
+// float xPos       = mod(aCubeId, uTexWidth);
+// float yPos       = floor(aCubeId / uTexWidth) / uTexWidth;
 // vec3 translation = texture2D(uDataTexture, vec2(xPos, yPos)).rgb;
 
