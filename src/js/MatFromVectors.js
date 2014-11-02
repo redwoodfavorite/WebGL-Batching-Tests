@@ -90,15 +90,15 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    // var numCubes     = 5000;
-    var numCubes     = 200;
+    var numCubes     = 1000;
+    var numCubes = 100;
 
     var positions = [];
     var tempPos   = [];
     var rotations = [];
     var tempRot   = [];
 
-    const VARIANCE = 2;
+    const VARIANCE = 1;
     const CUBESPERROW = 10;
     function updateVectors () {
         var i;
@@ -106,7 +106,7 @@ define(function(require){
         var iIndex;
         var jIndex;
         var calculatedVariance;
-        var currentTime = Date.now();
+        var currentTime        = Date.now();
         var translationCounter = Math.sin(currentTime * 0.001);
         var rotationCounter    = currentTime * 0.003;
 

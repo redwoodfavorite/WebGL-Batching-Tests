@@ -83,6 +83,11 @@ define(function(require){
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
+        // if(debug){
+            // shaderProgram.aDebugVerts = gl.getAttribLocation(shaderProgram, "aDebugVerts");
+            // gl.enableVertexAttribArray(shaderProgram.aDebugVerts);
+        // }
+
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.uDataTexture   = gl.getUniformLocation(shaderProgram, "uDataTexture");
         shaderProgram.uTexWidth      = gl.getUniformLocation(shaderProgram, "uTexWidth");
@@ -92,7 +97,9 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes  = 1000;
+    // var numCubes = 1000;
+    var numCubes = 100;
+    // var debug    = true;
 
     var positions = [];
     var tempPos   = [];
@@ -107,7 +114,7 @@ define(function(require){
         var iIndex;
         var jIndex;
         var calculatedVariance;
-        var currentTime = Date.now();
+        var currentTime        = Date.now();
         var translationCounter = Math.sin(currentTime * 0.001);
         var rotationCounter    = currentTime * 0.003;
         
@@ -118,13 +125,20 @@ define(function(require){
             calculatedVariance = Math.ceil(i / CUBESPERROW) * VARIANCE;
 
             iIndex = i * 6;
+
+            //pixel containing translation vector
             texData[iIndex + 0] = Math.sin(i + translationCounter) * calculatedVariance;
             texData[iIndex + 1] = Math.cos(i + translationCounter) * calculatedVariance;
             texData[iIndex + 2] = Math.sin(i + translationCounter) - 100.0;
 
-            texData[iIndex + 3] = Math.sin(i + rotationCounter);
-            texData[iIndex + 4] = Math.cos(i + rotationCounter);
-            texData[iIndex + 5] = Math.cos(i + rotationCounter);
+            //pixel containing rotation vector
+            // texData[iIndex + 3] = Math.sin(i + rotationCounter);
+            // texData[iIndex + 4] = Math.cos(i + rotationCounter);
+            // texData[iIndex + 5] = Math.cos(i + rotationCounter);
+
+            texData[iIndex + 3] = 0 + i;
+            texData[iIndex + 4] = 0 + i;
+            texData[iIndex + 5] = 0;
         }
 
         gl.activeTexture(gl.TEXTURE0);
@@ -144,10 +158,8 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
-        //24 vertices per cube, 2 different vector3s per vertex
+        //2 different vector3s per cube
         textureWidth = Math.ceil(Math.sqrt(numCubes * 2));
-        console.log(textureWidth)
-        //var vertexTextureWidth = Math.ceil(Math.sqrt(verticeCount/3));
     }
 
     function flatten (array) {
@@ -272,10 +284,16 @@ define(function(require){
         tick();
     }
 
+    var debuggerVertexBuffer;
+    function bufferDebuggerCoords () {
+
+    }
+
     function setPerspectiveMatrix () {
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-        gl.uniform1f(shaderProgram.uTexWidth, textureWidth - 1.);
+        console.log(textureWidth)
+        gl.uniform1f(shaderProgram.uTexWidth, textureWidth - 1);
     }
 
     function tick () {

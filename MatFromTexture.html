@@ -11,7 +11,6 @@
             varying vec3 vNormal;
 
             void main(void) {
-                // gl_FragColor = vec4(1.0);
                 gl_FragColor = vec4(vNormal, 1.0);
             }
         </script>
@@ -19,10 +18,9 @@
         <script id="shader-vs" type="x-shader/x-vertex">
             attribute vec3 aVertexPosition;
             attribute vec4 aVertexColor;
-            // attribute vec3 aTranslation;
-            // attribute vec3 aRotation;
             attribute vec3 aNormal;
             attribute float aCubeId;
+            attribute vec3 aDebuggerVertex;
             uniform float uTexWidth;
             uniform mat4 uPMatrix;
             uniform sampler2D uDataTexture;
@@ -88,7 +86,7 @@
             }
 
             mat4 matFromVectors(in vec3 translation, in vec3 rotation) {
-                mat4 mvMatrix = identity;
+                mat4 mvMatrix   = identity;
                 mvMatrix[3].xyz = translation;
 
                 mvMatrix = rotateMatrix(mvMatrix, rotation.x, vec3(1.0, 0.0, 0.0));
@@ -100,12 +98,12 @@
 
             void main(void) {
                 vec2 posLocation = vec2(
-                    mod(aCubeId * 2.0, uTexWidth),
-                    floor(aCubeId * 2.0 / uTexWidth) / uTexWidth
+                    mod(aCubeId * 2.0, uTexWidth) / uTexWidth,
+                    floor((aCubeId * 2.0) / uTexWidth) / uTexWidth
                 );
 
                 vec2 rotLocation = vec2(
-                    mod((aCubeId * 2.0 + 1.0), uTexWidth),
+                    mod((aCubeId * 2.0 + 1.0), uTexWidth) / uTexWidth,
                     floor((aCubeId * 2.0 + 1.0) / uTexWidth) / uTexWidth
                 );
 
@@ -113,7 +111,7 @@
                 vec3 rotation    = texture2D(uDataTexture, rotLocation).rgb;
 
                 vNormal     = aNormal;
-                vec4 pos    = uPMatrix * matFromVectors(translation, rotation) * vec4(aVertexPosition, 1.0);
+                vec4 pos    = uPMatrix * matFromVectors(vec3(translation.xy, -100.0), vec3(0.0)) * vec4(aVertexPosition, 1.0);
                 gl_Position = pos;
             }
         </script>
