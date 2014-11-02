@@ -90,15 +90,15 @@ define(function(require){
     var pMatrix       = mat4.create();
 
     // FOR CUBE VERTICES
-    var numCubes     = 1000;
-    var numCubes = 100;
+    // var numCubes = 1000;
+    var numCubes = 1000;
 
     var positions = [];
     var tempPos   = [];
     var rotations = [];
     var tempRot   = [];
 
-    const VARIANCE = 1;
+    const VARIANCE    = 1;
     const CUBESPERROW = 10;
     function updateVectors () {
         var i;

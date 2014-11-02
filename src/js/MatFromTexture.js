@@ -3,9 +3,8 @@ define(function(require){
     var canvas;
     
     function initGL(canvas) {
-        console.log(1)
-        canvas = document.createElement('canvas');
-        canvas.width = innerWidth;
+        canvas        = document.createElement('canvas');
+        canvas.width  = innerWidth;
         canvas.height = innerHeight;
 
         document.body.appendChild(canvas);
@@ -83,11 +82,6 @@ define(function(require){
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
 
-        // if(debug){
-            // shaderProgram.aDebugVerts = gl.getAttribLocation(shaderProgram, "aDebugVerts");
-            // gl.enableVertexAttribArray(shaderProgram.aDebugVerts);
-        // }
-
         shaderProgram.pMatrixUniform = gl.getUniformLocation(shaderProgram, "uPMatrix");
         shaderProgram.uDataTexture   = gl.getUniformLocation(shaderProgram, "uDataTexture");
         shaderProgram.uTexWidth      = gl.getUniformLocation(shaderProgram, "uTexWidth");
@@ -98,8 +92,7 @@ define(function(require){
 
     // FOR CUBE VERTICES
     // var numCubes = 1000;
-    var numCubes = 100;
-    // var debug    = true;
+    var numCubes = 1000;
 
     var positions = [];
     var tempPos   = [];
@@ -132,13 +125,13 @@ define(function(require){
             texData[iIndex + 2] = Math.sin(i + translationCounter) - 100.0;
 
             //pixel containing rotation vector
-            // texData[iIndex + 3] = Math.sin(i + rotationCounter);
-            // texData[iIndex + 4] = Math.cos(i + rotationCounter);
-            // texData[iIndex + 5] = Math.cos(i + rotationCounter);
+            texData[iIndex + 3] = Math.sin(i + rotationCounter);
+            texData[iIndex + 4] = Math.cos(i + rotationCounter);
+            texData[iIndex + 5] = Math.cos(i + rotationCounter);
 
-            texData[iIndex + 3] = 0 + i;
-            texData[iIndex + 4] = 0 + i;
-            texData[iIndex + 5] = 0;
+            // texData[iIndex + 3] = 0 + i;
+            // texData[iIndex + 4] = 0 + i;
+            // texData[iIndex + 5] = 0;
         }
 
         gl.activeTexture(gl.TEXTURE0);
@@ -159,7 +152,19 @@ define(function(require){
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 
         //2 different vector3s per cube
-        textureWidth = Math.ceil(Math.sqrt(numCubes * 2));
+        var minWidth = Math.ceil(Math.sqrt(numCubes * 2));
+
+        //get closest power of 2
+        var i = 0;
+        var powerOfTwo;
+        while(true) {
+            powerOfTwo = Math.pow(2, i);
+            if(powerOfTwo > minWidth) {
+                textureWidth = powerOfTwo;
+                break;
+            }
+            i++;
+        }
     }
 
     function flatten (array) {
@@ -268,6 +273,7 @@ define(function(require){
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+
     }
 
     function webGLStart(canvas) {
@@ -284,16 +290,11 @@ define(function(require){
         tick();
     }
 
-    var debuggerVertexBuffer;
-    function bufferDebuggerCoords () {
-
-    }
 
     function setPerspectiveMatrix () {
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0, pMatrix);
         gl.uniformMatrix4fv(shaderProgram.pMatrixUniform, false, pMatrix);
-        console.log(textureWidth)
-        gl.uniform1f(shaderProgram.uTexWidth, textureWidth - 1);
+        gl.uniform1f(shaderProgram.uTexWidth, textureWidth);
     }
 
     function tick () {

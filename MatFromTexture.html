@@ -111,7 +111,7 @@
                 vec3 rotation    = texture2D(uDataTexture, rotLocation).rgb;
 
                 vNormal     = aNormal;
-                vec4 pos    = uPMatrix * matFromVectors(vec3(translation.xy, -100.0), vec3(0.0)) * vec4(aVertexPosition, 1.0);
+                vec4 pos    = uPMatrix * matFromVectors(vec3(translation.xyz), rotation) * vec4(aVertexPosition, 1.0);
                 gl_Position = pos;
             }
         </script>
